@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Tracker</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+
+body{
+margin:0;
+font-family:system-ui;
+background:#0b0b0c;
+color:#fff;
+max-width:720px;
+margin:auto;
+padding:16px;
+}
+
+.header{
+background:#151517;
+padding:18px;
+border-radius:20px;
+margin-bottom:14px;
+box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+
+.week{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+.arrow{
+width:44px;
+height:44px;
+border:none;
+border-radius:14px;
+background:#2a2a2e;
+color:#fff;
+font-size:18px;
+}
+
+.title{
+text-align:center;
+}
+
+.title b{
+font-size:16px;
+}
+
+.title small{
+color:#888;
+}
+
+.stats{
+display:flex;
+gap:10px;
+margin-top:12px;
+}
+
+.card{
+flex:1;
+background:#1f1f22;
+padding:12px;
+border-radius:14px;
+text-align:center;
+}
+
+.card div:last-child{
+font-size:20px;
+font-weight:bold;
+margin-top:6px;
+}
+
+.day{
+background:#151517;
+padding:16px;
+border-radius:18px;
+margin-bottom:12px;
+box-shadow:0 5px 20px rgba(0,0,0,.4);
+}
+
+.gregorian{
+font-size:22px;
+font-weight:800;
+}
+
+.jalali{
+font-size:12px;
+color:#777;
+margin-top:4px;
+}
+
+.btns{
+display:flex;
+gap:8px;
+margin-top:14px;
+}
+
+.btn{
+flex:1;
+border:none;
+padding:12px;
+border-radius:14px;
+background:#26262a;
+color:#fff;
+font-weight:600;
+transition:.2s;
+}
+
+.btn.active.work{background:#ff9800;color:#000;}
+.btn.active.gym{background:#4caf50;color:#000;}
+.btn.active.not{background:#777;color:#000;}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+<div class="week">
+<button class="arrow" onclick="week(-1)">‹</button>
+
+<div class="title">
+<b id="weekTitle">Week</b><br>
+<small>Tracker</small>
+</div>
+
+<button class="arrow" onclick="week(1)">›</button>
+</div>
+
+<div class="stats">
+<div class="card">Work<div id="w">0</div></div>
+<div class="card">Gym<div id="g">0</div></div>
+<div class="card">Not<div id="n">0</div></div>
+</div>
+
+</div>
+
+<div id="list"></div>
+
+<script>
+
+let start = new Date();
+start.setDate(start.getDate() - start.getDay());
+
+let db = JSON.parse(localStorage.getItem("db") || "{}");
+
+function save(){
+localStorage.setItem("db", JSON.stringify(db));
+}
+
+function key(d){return d.toDateString();}
+
+function render(){
+
+let list = document.getElementById("list");
+list.innerHTML="";
+
+let work=0,gym=0,not=0;
+
+for(let i=0;i<7;i++){
+
+let d = new Date(start);
+d.setDate(start.getDate()+i);
+
+let k = key(d);
+
+if(!db[k]) db[k]={work:false,gym:false,not:false};
+
+let v = db[k];
+
+if(v.work) work++;
+if(v.gym) gym++;
+if(v.not) not++;
+
+let el = document.createElement("div");
+el.className="day";
+
+el.innerHTML=`
+<div class="gregorian">${d.toDateString()}</div>
+<div class="jalali">۲۶ خرداد (نمونه)</div>
+
+<div class="btns">
+<button class="btn ${v.work?'active work':''}" onclick="toggle('${k}','work')">Work</button>
+<button class="btn ${v.gym?'active gym':''}" onclick="toggle('${k}','gym')">Gym</button>
+<button class="btn ${v.not?'active not':''}" onclick="toggle('${k}','not')">Not</button>
+</div>
+`;
+
+list.appendChild(el);
+}
+
+document.getElementById("w").innerText=work;
+document.getElementById("g").innerText=gym;
+document.getElementById("n").innerText=not;
+
+}
+
+function toggle(k,t){
+if(!db[k]) db[k]={work:false,gym:false,not:false};
+db[k][t]=!db[k][t];
+save();
+render();
+}
+
+function week(x){
+start.setDate(start.getDate()+x*7);
+render();
+}
+
+render();
+
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
+}
+
+</script>
+
+</body>
+</html>
